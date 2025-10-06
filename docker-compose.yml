@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: ssl-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sslmanager
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: ssl-web
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "444:5000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/sslmanager
+    command: python app.py
+    restart: always
+
+  sync:
+    build: .
+    container_name: ssl-sync
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/sslmanager
+      - IPA_URL=https://ramesh5.core42.idm.local/ipa/session/json
+      - IPA_USER=ramesh
+      - IPA_PASS=Devansh2025@
+    command: sh -c "while true; do python sync_from_ipa.py; sleep 21600; done"
+    restart: always
+
+volumes:
+  postgres_data:
+
