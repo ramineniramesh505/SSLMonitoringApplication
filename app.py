@@ -17,12 +17,22 @@ Session = sessionmaker(bind=engine)
 def home():
     session_db = Session()
     certs = session_db.query(Certificate).all()
-    # Calculate days left
+
+    # Calculate days left and status
     for cert in certs:
         if cert.expiry:
             cert.days_left = (cert.expiry - datetime.utcnow().date()).days
+            # Determine status
+            if cert.days_left < 0:
+                cert.status = "Expired"
+            elif cert.days_left <= 30:
+                cert.status = "Expiring Soon"
+            else:
+                cert.status = "Active"
         else:
             cert.days_left = "N/A"
+            cert.status = "Unknown"
+
     session_db.close()
     return render_template("index.html", certs=certs)
 

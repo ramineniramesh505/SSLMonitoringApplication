@@ -9,7 +9,10 @@
       height: 50px;
     }
     .header-text {
-      margin-bottom: 1rem; /* adds space after the text */
+      margin-bottom: 1rem;
+    }
+    .badge {
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -23,7 +26,6 @@
         <p class="header-text">This application is developed by Ramesh to monitor the SSL certificate expiry dates from IDM</p>
       </div>
       <div>
-        <!-- Use relative path if running via Flask -->
         <img src="/static/thumbnail_Outlook-c5ndlzoc.png" alt="Logo" class="logo">
       </div>
     </div>
@@ -54,6 +56,7 @@
           <th>CN</th>
           <th>Expiry</th>
           <th>Days left</th>
+          <th>Status</th>
           <th>Notes</th>
           <th>Action</th>
         </tr>
@@ -64,6 +67,17 @@
           <td>{{ cert.cn }}</td>
           <td>{{ cert.expiry }}</td>
           <td>{{ cert.days_left }}</td>
+          <td>
+            {% if cert.status == "Expired" %}
+              <span class="badge bg-danger">{{ cert.status }}</span>
+            {% elif cert.status == "Expiring Soon" %}
+              <span class="badge bg-warning text-dark">{{ cert.status }}</span>
+            {% elif cert.status == "Active" %}
+              <span class="badge bg-success">{{ cert.status }}</span>
+            {% else %}
+              <span class="badge bg-secondary">{{ cert.status }}</span>
+            {% endif %}
+          </td>
           <td>{{ cert.notes }}</td>
           <td>
             <form action="/delete/{{ cert.id }}" method="post">
@@ -89,3 +103,4 @@
   </script>
 </body>
 </html>
+
